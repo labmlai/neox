@@ -8,15 +8,19 @@ summary: >
 # Utilities and Helpers
 
 * [Cache for intermediate activations (for faster inference)](cache.html)
+* [Utilities for training and fine-tuning](training.html)
 """
+
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Set
 
 import torch
 from tokenizers import Tokenizer
 
-from labml import logger
+from labml import logger, monit
 from labml.logger import inspect, Text
+from neox.checkpoint import get_checkpoint_files, load_checkpoint_files
+from neox.model import get_layers
 from neox.tokenizer import get_tokenizer
 
 # Tokenizer singleton
@@ -129,7 +133,10 @@ def print_tokens(target: List[int], others: List[List[int]]):
     logger.log(parts)
 
 
-def _test():
+def _test_sample_tokens():
+    """
+    Test sample tokens
+    """
     ids = get_sample_tokens(True)
     inspect(ids)
 
@@ -139,6 +146,54 @@ def _test():
     inspect(_TOKENIZER.decode(ids))
 
 
+def load_layers(filter_layers: Optional[Set[int]]):
+    """
+    ### Load GPT-NeoX layers
+
+    This is a helper function to initialize andn load the layers.
+
+    :param filter_layers: are the layers to be filters. If `None` all layers will be loaded.
+    :return: the list of loaded layers
+    """
+    with torch.no_grad():
+        layers = []
+        with monit.section("Layers"):
+            for i, (layer, files) in enumerate(zip(get_layers(filter_layers=filter_layers), get_checkpoint_files())):
+                if layer is None or files is None:
+                    continue
+                layer.load_state(*load_checkpoint_files(files))
+
+                layers.append(layer)
+
+                monit.progress(i / 49)
+
+    return layers
+
+
+def balance_layers(n_layers: int, n_chunks: int):
+    """
+    ### Balance layers
+
+    Split the `n_layers` into `n_chunks`. This is used for pipeline parallel training.
+
+    :param n_layers: is the number of layers
+    :param n_chunks: is the number of chunks
+    :return: returns a list with the number of layers for each chunk
+    """
+    balance = []
+    for i in range(n_chunks):
+        balance.append((n_layers - sum(balance)) // (n_chunks - i))
+
+    return reversed(balance)
+
+
+def _test_balance():
+    """
+    Test balancing
+    """
+    inspect(balance_layers(45, 4))
+
+
 #
 if __name__ == '__main__':
-    _test()
+    _test_sample_tokens()
