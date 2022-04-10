@@ -13,7 +13,7 @@ Here is the code for layers of GPT-NeoX model and the code to load
 The method `load_state` in the layers load the checkpoints of that layer.
 The checkpoint loading helpers are on [`checkpoint.py`](checkpoint.html)
 """
-
+import copy
 import math
 from typing import Dict, Optional, Set
 
@@ -66,6 +66,7 @@ class RoPE(torch.nn.Module):
     WE have annotated implementation of RoPE [here](https://nn.labml.ai/transformers/rope/index.html)
     with more notes the theory.
     """
+
     def __init__(self, d_rope: int, base: float = 10_000.):
         """
         :param d_rope: is the number of features for RoPE embeddings
@@ -323,6 +324,7 @@ class TransformerLayer(nn.Module):
     """
     ## Transformer Layer
     """
+
     def __init__(self, n_hidden: int = 6_144, n_heads: int = 64):
         """
         :param n_hidden: is the embedding size
@@ -442,7 +444,8 @@ class ReadoutLayer(nn.Module):
 
 
 def get_layers(n_vocab: int = 50_432, n_hidden: int = 6_144, n_layers: int = 44, n_heads: int = 64,
-               filter_layers: Optional[Set] = None):
+               filter_layers: Optional[Set] = None, *,
+               is_clone_layers: bool = False):
     """
     ### Generator to create layers
 
@@ -457,6 +460,7 @@ def get_layers(n_vocab: int = 50_432, n_hidden: int = 6_144, n_layers: int = 44,
     :param n_heads: is the number of attention heads
     :param filter_layers: are the set of layers to be used. All layers will be used if None.
         This is used to test smaller versions of the model with fewer layers
+    :param is_clone_layers: specifies whether to clone the transformer layers (a bit faster)
     :return: the layers as a generator
     """
 
@@ -468,6 +472,8 @@ def get_layers(n_vocab: int = 50_432, n_hidden: int = 6_144, n_layers: int = 44,
     #
     yield None
 
+    tl = None
+
     # Transformer layers
     for i in range(n_layers):
         # Yield `None` if we are skipping layers
@@ -476,7 +482,14 @@ def get_layers(n_vocab: int = 50_432, n_hidden: int = 6_144, n_layers: int = 44,
             continue
         # Transformer layer
         with monit.section(f'Transformer Layer {i}'):
-            layer = TransformerLayer(n_hidden, n_heads)
+            if is_clone_layers:
+                if tl is None:
+                    tl = TransformerLayer(n_hidden, n_heads)
+                    layer = tl
+                else:
+                    layer = copy.deepcopy(tl)
+            else:
+                layer = TransformerLayer(n_hidden, n_heads)
         yield layer
 
     #
@@ -512,6 +525,8 @@ def _test_eval():
 
     Run the model on a sample text and observe the output.
     This loads the layers to CPU so it will run on any computer.
+
+    This gets an accuracy of 336/573
     """
     from neox.utils import get_sample_tokens, print_token_outputs
 
@@ -527,7 +542,7 @@ def _test_eval():
 
         # Iterate through the layers
         with monit.section("Layers"):
-            for i, (layer, files) in enumerate(zip(get_layers(), checkpoint.get_checkpoint_files())):
+            for i, (layer, files) in enumerate(zip(get_layers(is_clone_layers=True), checkpoint.get_checkpoint_files())):
                 # Skip empty layers and empty checkpoints
                 if layer is None or files is None:
                     continue

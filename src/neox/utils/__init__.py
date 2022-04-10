@@ -20,7 +20,6 @@ from tokenizers import Tokenizer
 from labml import logger, monit
 from labml.logger import inspect, Text
 from neox.checkpoint import get_checkpoint_files, load_checkpoint_files
-from neox.model import get_layers
 from neox.tokenizer import get_tokenizer
 
 # Tokenizer singleton
@@ -155,10 +154,13 @@ def load_layers(filter_layers: Optional[Set[int]]):
     :param filter_layers: are the layers to be filters. If `None` all layers will be loaded.
     :return: the list of loaded layers
     """
+    from neox.model import get_layers
+
     with torch.no_grad():
         layers = []
         with monit.section("Layers"):
-            for i, (layer, files) in enumerate(zip(get_layers(filter_layers=filter_layers), get_checkpoint_files())):
+            for i, (layer, files) in enumerate(zip(get_layers(filter_layers=filter_layers, is_clone_layers=True),
+                                                   get_checkpoint_files())):
                 if layer is None or files is None:
                     continue
                 layer.load_state(*load_checkpoint_files(files))
