@@ -5,6 +5,8 @@ We have taken out several optimizations in GPT-NeoX for simplicity.
 
 ### [Annotated implementation](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/__init__.py)
 
+[![Screenshot](https://github.com/labmlai/neox/blob/main/assets/annotated_gpt_neox_model.png)](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/__init__.py)
+
 ### Sample usages
 
 * [Notebook to download checkpoints and test the model](https://github.com/labmlai/neox/tree/main/notebooks/download_and_evaluate.ipynb)
