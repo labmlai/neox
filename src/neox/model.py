@@ -531,7 +531,7 @@ def _test_eval():
     from neox.utils import get_sample_tokens, print_token_outputs
 
     # [Get the encodings of a sample](utils.html)
-    ids = get_sample_tokens()
+    ids = get_sample_tokens(True)
 
     # No need to keep the computation graph for gradients
     with torch.no_grad():
