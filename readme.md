@@ -9,8 +9,8 @@ We have taken out several optimizations in GPT-NeoX for simplicity.
 
 ### Sample usages
 
-* [Notebook to download checkpoints and test the model](https://github.com/labmlai/neox/tree/main/notebooks/download_and_evaluate.ipynb)
-  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/labmlai//neox/tree/main/notebooks/download_and_evaluate.ipynb)
+* [Notebook to download checkpoints and test the model](https://github.com/labmlai/neox/blob/main/notebooks/download_and_evaluate.ipynb)
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/labmlai//neox/blob/main/notebooks/download_and_evaluate.ipynb)
 * [Fine-tuning example](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/samples/fine_tune_biases.py)
 * [Text generating on multi GPU](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/samples/generating_pipe.html)
 * 🚧 [Text generating on a single GPU](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/samples/generating_single_gpu.html)
