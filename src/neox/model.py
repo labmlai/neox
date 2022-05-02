@@ -363,7 +363,7 @@ class TransformerLayer(nn.Module):
         """
         with monit.section('Load transformer layer'):
             # Attention output transform
-            checkpoint.merge_params_duplicate(self.attention.output.bias, 'attention.dense.bias', p1, p2)
+            checkpoint.merge_params_sum(self.attention.output.bias, 'attention.dense.bias', p1, p2)
             checkpoint.merge_params_dim_1(self.attention.output.weight, 'attention.dense.weight', p1, p2)
 
             # Attention query, key and value transform
@@ -379,7 +379,7 @@ class TransformerLayer(nn.Module):
             checkpoint.merge_params_dim_0(self.ffn.dense_h_h4.weight, 'mlp.dense_h_to_4h.weight', p1, p2)
 
             # FFN first transform
-            checkpoint.merge_params_duplicate(self.ffn.dense_h4_h.bias, 'mlp.dense_4h_to_h.bias', p1, p2)
+            checkpoint.merge_params_sum(self.ffn.dense_h4_h.bias, 'mlp.dense_4h_to_h.bias', p1, p2)
             checkpoint.merge_params_dim_1(self.ffn.dense_h4_h.weight, 'mlp.dense_4h_to_h.weight', p1, p2)
 
             # Layer norm before FFN

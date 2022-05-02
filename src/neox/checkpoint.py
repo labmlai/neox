@@ -150,7 +150,22 @@ def merge_params_duplicate(param: Union[nn.Parameter, torch.Tensor], key: str, p
     diff = sum((w1 - w2) ** 2).item()
     assert diff < 1e-4, f'The partitions do not match: {key}'
 
-    param.data[:] = w1
+    param.data[:] = (w1 + w2) / 2.
+
+
+def merge_params_sum(param: Union[nn.Parameter, torch.Tensor], key: str, p1: Dict[str, torch.Tensor],
+                     p2: Dict[str, torch.Tensor]):
+    """
+    ### Load biases that are partitioned which gets added on reduce
+
+    :param param: is the parameter
+    :param key: is the name of the parameter
+    :param p1: first partition dictionary
+    :param p2: second partition dictionary
+    """
+    w1, w2 = p1[key], p2[key]
+
+    param.data[:] = w1 + w2
 
 
 #
