@@ -9,7 +9,6 @@ summary: >
 """
 
 import torch
-from labml.logger import inspect
 from torch import nn
 
 from neox.evaluation import run_eval_harness
@@ -29,4 +28,4 @@ class DummyModel(nn.Module):
 
 
 if __name__ == '__main__':
-    inspect(run_eval_harness(DummyModel(50_432), 'dummy', ['lambada']), _expand=True, _n=-1)
+    print(run_eval_harness(DummyModel(50_432), 'dummy', ['lambada']))

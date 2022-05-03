@@ -1,7 +1,6 @@
 import fairscale
 import torch
 from labml import monit
-from labml.logger import inspect
 from torch import nn
 
 from neox.evaluation import run_eval_harness
@@ -25,4 +24,4 @@ if __name__ == '__main__':
                                        devices=devices,
                                        chunks=4)
 
-    inspect(run_eval_harness(model, 'pipeline_parallel', []), _expand=True, _n=-1)
+    print(run_eval_harness(model, 'pipeline_parallel', []))
