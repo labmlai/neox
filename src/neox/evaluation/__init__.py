@@ -200,20 +200,6 @@ class EvalHarnessAdapter(BaseLM):
         ### Run given evaluations
         """
 
-        # All tasks if nothing is specified
-        if not eval_tasks:
-            eval_tasks = [
-                "anli_r1",
-                "anli_r2",
-                "anli_r3",
-                "hellaswag",
-                "lambada",
-                "piqa",
-                "winogrande",
-                "wsc",
-                "mathqa",
-            ]
-
         # Run [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) evaluator
         results = evaluator.evaluate(lm=self, task_dict=tasks.get_task_dict(eval_tasks))
 
@@ -235,6 +221,20 @@ def run_eval_harness(model: nn.Module, name: str, eval_tasks: List[str], device:
     with monit.section('Load tokenizer'):
         vocab_file = lab.get_data_path() / 'neox' / 'slim_weights' / '20B_tokenizer.json'
         tokenizer = Tokenizer.from_file(str(vocab_file))
+
+    # All tasks if nothing is specified
+    if not eval_tasks:
+        eval_tasks = [
+            "anli_r1",
+            "anli_r2",
+            "anli_r3",
+            "hellaswag",
+            "lambada",
+            "piqa",
+            "winogrande",
+            "wsc",
+            "mathqa",
+        ]
 
     # Create the adapter
     adapter = EvalHarnessAdapter(model, tokenizer, 50_432, batch_size, device)
