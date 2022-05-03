@@ -1,0 +1,6 @@
+torch
+torchtext
+labml
+tokenizers
+fairscale
+lm-eval
