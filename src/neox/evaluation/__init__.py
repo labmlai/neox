@@ -226,7 +226,7 @@ class EvalHarnessAdapter(BaseLM):
         return results
 
 
-def run_eval_harness(model: nn.Module, name: str, eval_tasks: List[str], batch_size: int = 8):
+def run_eval_harness(model: nn.Module, name: str, eval_tasks: List[str], device: torch.device, batch_size: int = 8):
     """
     ## Run evaluation harness with a given model
     """
@@ -237,7 +237,7 @@ def run_eval_harness(model: nn.Module, name: str, eval_tasks: List[str], batch_s
         tokenizer = Tokenizer.from_file(str(vocab_file))
 
     # Create the adapter
-    adapter = EvalHarnessAdapter(model, tokenizer, 50_432, batch_size, torch.device('cpu'))
+    adapter = EvalHarnessAdapter(model, tokenizer, 50_432, batch_size, device)
 
     # Run
     return adapter.run_eval(name, eval_tasks)

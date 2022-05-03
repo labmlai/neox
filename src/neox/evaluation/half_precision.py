@@ -11,4 +11,4 @@ if __name__ == '__main__':
     with monit.section('Sequential'):
         model = nn.Sequential(*layers).half().to(torch.device('cuda:0'))
 
-    print(run_eval_harness(model, 'half_precision', []))
+    print(run_eval_harness(model, 'half_precision', [], torch.device('cuda:0')))

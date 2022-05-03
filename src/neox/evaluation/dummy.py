@@ -28,4 +28,4 @@ class DummyModel(nn.Module):
 
 
 if __name__ == '__main__':
-    print(run_eval_harness(DummyModel(50_432), 'dummy', ['lambada']))
+    print(run_eval_harness(DummyModel(50_432), 'dummy', ['lambada'], torch.device('cpu')))

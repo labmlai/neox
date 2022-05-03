@@ -24,4 +24,4 @@ if __name__ == '__main__':
                                        devices=devices,
                                        chunks=4)
 
-    print(run_eval_harness(model, 'pipeline_parallel', []))
+    print(run_eval_harness(model, 'pipeline_parallel', [], torch.device('cuda:0')))
