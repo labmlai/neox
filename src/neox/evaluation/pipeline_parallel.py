@@ -1,13 +1,15 @@
 import fairscale
 import torch
-from labml import monit
 from torch import nn
 
+from labml import monit
 from neox.evaluation import run_eval_harness
-from neox.utils import load_layers
+from neox.utils import LayerGenerator
 
 if __name__ == '__main__':
-    layers = load_layers(None)
+    layers = list(LayerGenerator(is_clone_layers=True,
+                                 filter_layers=None,
+                                 ).load())
 
     with monit.section('Sequential'):
         model = nn.Sequential(*layers)

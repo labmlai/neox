@@ -47,6 +47,22 @@ class Cache:
         # Push to the queue
         self._cache[name].append(value)
 
+    def q_size(self, name):
+        """
+        ### Return the size of the queue
+
+        :param name: is the name of the queue
+        :return: size of the queue if exists else None
+        """
+
+        if name not in self._cache:
+            return None
+
+        if type(self._cache[name]) != list:
+            return None
+
+        return len(self._cache[name])
+
     def pop(self, name: str):
         """
         ### Pop from a queue

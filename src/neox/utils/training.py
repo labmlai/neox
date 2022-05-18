@@ -12,6 +12,7 @@ from typing import List
 import torch.nn as nn
 import torch.utils.data
 import torch.optim
+from torch.cuda import amp
 
 from labml import monit, tracker
 from labml.logger import inspect
@@ -108,8 +109,73 @@ def train(model: nn.Module, optimizer: torch.optim.Adam,
         tracker.save({'loss.train': loss, 'acc.train': accuracy * 100})
 
         # Log model stats like gradients and weights once in a while
-        if batch_idx % train_log_interval == 0:
-            tracker.save(model=model)
+        # if batch_idx % train_log_interval == 0:
+        #     tracker.save(model=model)
 
     # Log model stats like gradients and weights at the end of the epoch
-    tracker.save(model=model)
+    # tracker.save(model=model)
+
+
+def train_amp(model: nn.Module, optimizer: torch.optim.Adam,
+              train_loader: torch.utils.data.DataLoader,
+              device: torch.device, scaler: amp.GradScaler,
+              train_log_interval: int):
+    """
+    ## Simple trainer
+
+    This trains the `model` for a single epoch.
+
+    :param model: is the model
+    :param optimizer: is the optimizer
+    :param train_loader: is the training data loader
+    :param device: is the device for inputs
+    :param train_log_interval:  is the logging frequency
+    """
+
+    # Set model for train
+    model.train()
+
+    # Cross-entropy loss
+    loss_func = nn.CrossEntropyLoss()
+
+    # Iterate through the batches
+    for batch_idx, (data, target) in monit.enum('Train', train_loader):
+        # Set gradients to zero
+        optimizer.zero_grad()
+
+        # Forward pass
+        with amp.autocast():
+            with monit.section('Forward pass'):
+                output = model(data.to(device))
+            # Move targets to the same device as output
+            target = target.to(output.device)
+
+            # Calculate loss
+            loss = loss_func(output.view(target.numel(), -1), target.view(-1))
+
+        tracker.add({'loss.unscaled': loss})
+        # Get predictions
+        pred = output.argmax(dim=-1)
+        # Calculate accuracy
+        accuracy = pred.eq(target).sum().item() / pred.numel()
+
+        # Backward pass
+        loss = scaler.scale(loss)
+
+        with monit.section('Backward pass'):
+            loss.backward()
+
+        # Optimize
+        with monit.section('Optimize'):
+            optimizer.step()
+
+        # Log the stats
+        tracker.add_global_step()
+        tracker.save({'loss.train': loss, 'acc.train': accuracy * 100})
+
+        # Log model stats like gradients and weights once in a while
+        # if batch_idx % train_log_interval == 0:
+        #     tracker.save(model=model)
+
+    # Log model stats like gradients and weights at the end of the epoch
+    # tracker.save(model=model)

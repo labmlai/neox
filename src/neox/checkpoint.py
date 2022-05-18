@@ -100,7 +100,10 @@ def load_checkpoint_files(files: Tuple[str, str]):
     :return: the loaded parameter tensors
     """
     checkpoint_path = CHECKPOINTS_DOWNLOAD_PATH / 'global_step150000'
-    return [torch.load(checkpoint_path / f) for f in files]
+    with monit.section('Load checkpoint'):
+        data = [torch.load(checkpoint_path / f) for f in files]
+
+    return data
 
 
 def merge_params_dim_0(param: Union[nn.Parameter, torch.Tensor], key: str, p1: Dict[str, torch.Tensor],
