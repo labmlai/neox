@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader, RandomSampler
 
 from labml import tracker, experiment, monit
 from neox.data import get_training_data
-from neox.utils import load_layers, balance_layers
+from neox.utils import balance_layers, LayerGenerator
 from neox.utils.training import train, get_trainable_params, train_biases_only
 
 # List of layers to load. This is used for testing.
@@ -39,7 +39,9 @@ def main():
     experiment.create(name='finetune_neox_biases', comment='Pipeline parallel', writers={'screen', 'web_api'})
 
     # Load layers
-    layers = load_layers(LAYERS)
+    layers = list(LayerGenerator(is_clone_layers=True,
+                                 filter_layers=LAYERS,
+                                 ).load())
 
     # Mark `requires_grad=True` for biases using a [helper function](../utils/training.html).
     train_biases_only(layers)
@@ -67,7 +69,7 @@ def main():
                           sampler=RandomSampler(dataset, replacement=True))
 
     # Initialize optimizer
-    optimizer = optim.Adam(get_trainable_params(pipe_model), lr=1e-6)
+    optimizer = optim.Adam(get_trainable_params(pipe_model), lr=3e-4)
 
     # Train the model using the [helper function](../utils/training.html)
     with experiment.start():

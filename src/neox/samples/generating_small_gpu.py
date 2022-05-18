@@ -1,24 +1,27 @@
 """
 ---
-title: Generate Text with GPT-NeoX using Pipeline Parallelism
+title: Generate Text with GPT-NeoX by Evaluating Layer by Layer
 summary: >
-     Generate Text with GPT-NeoX using Fairscale Pipeline Parallelism
+     Generate Text with GPT-NeoX by evaluating layer by layer
 ---
 
-#  Generate Text with GPT-NeoX using Pipeline Parallelism
+#  Generate Text with GPT-NeoX by Evaluating Layer by Layer
 
-This shows how to generate text from GPT-NeoX with pipeline parallelism.
+This shows how to generate text from GPT-NeoX with a small GPU.
+It will first load all layers to memory and then load layer-by-layer to GPU for inference.
+
+This requires enough memory on  computer to load entire model.
+Even a small GPU is enough since we load only a single layer at a time to the GPU.
 """
 
 # Imports
 from typing import List
 
-import fairscale
 import torch
 from torch import nn
 
 from labml import monit
-from neox.utils import load_layers, get_tokens, print_tokens, balance_layers, LayerGenerator
+from neox.utils import get_tokens, print_tokens, LayerGenerator
 from neox.utils.cache import get_cache
 
 # List of layers to load. This is used for testing.
@@ -30,21 +33,34 @@ LAYERS = None
 PROMPT = 'Einstein was born in the German Empire, but moved to Switzerland in 1895, forsaking his German'
 
 
-def infer(model: nn.Module, ids: List[int], device: torch.device):
+def infer(layers: List[nn.Module], ids: List[int], device: torch.device):
     """
     ### Predict the next token
 
-    :param model: is the model
+    :param layers: is the list of layers
     :param ids: are the input token ids
     :param device: is the device of the model
     """
 
-    # Call the model
+    # Offload to CPU
+    offload = torch.device('cpu')
+    # CUDA stream for async loading and de-loading. This is still WIP.
+    s = torch.cuda.Stream()
+    #
     with torch.no_grad():
+        # Get the tokens
         x = torch.tensor(ids)[None, :].to(device)
-        x = model(x)
+        # Iterate through the layers
+        for layer in layers:
+            # Move the layer to device. Should pre-load.
+            layer.to(device)
+            # Evaluate the layer
+            x = layer(x)
+            # Offload (async)
+            with torch.cuda.stream(s):
+                layer.to(offload)
 
-    # Return the outputs
+    # Return predicted token
     return x[0].max(dim=-1)[1].tolist()
 
 
@@ -60,27 +76,19 @@ def generate():
     # Load layers
     layers = list(LayerGenerator(is_clone_layers=True,
                                  filter_layers=LAYERS,
+                                 dtype=torch.float16,
                                  ).load())
 
-    # Create pipeline parallel model
-    with monit.section('Pipe'):
-        # Number of GPUs
-        n_gpus = min(4, torch.cuda.device_count())
-        # [Get the distribution of layers across the GPUs](../utils/__init__.py)
-        balance = balance_layers(len(layers), n_gpus)
-        # Get the GPU references
-        devices = [torch.device(f'cuda:{i}') for i in range(n_gpus)]
-        # Create the pipeline parallel model
-        pipe_model = fairscale.nn.Pipe(nn.Sequential(*layers),
-                                       balance=balance,
-                                       devices=devices)
+    # Device
+    device = torch.device('cuda:0')
 
     # Get token ids
     ids = get_tokens(PROMPT)
 
     # Run the model
     cache.set('state_ids', (None, 1))
-    next_token = infer(pipe_model, ids, pipe_model.devices[0])[-1]
+    with monit.section('Infer'):
+        next_token = infer(layers, ids, device)[-1]
 
     # Append the predicted token
     ids += [next_token]
@@ -91,7 +99,8 @@ def generate():
         cache.set('state_ids', (i, i + 1))
         # Get next token. Note that we only feed the last token to the model because
         # we cache the key/value pairs of previous tokens.
-        next_token = infer(pipe_model, [next_token], pipe_model.devices[0])[-1]
+        with monit.section('Infer'):
+            next_token = infer(layers, [next_token], device)[-1]
         # Append the predicted token
         ids += [next_token]
         # Print
