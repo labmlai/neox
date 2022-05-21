@@ -5,7 +5,7 @@ several optimizations in GPT-NeoX for simplicity.
 
 ### [Annotated implementation](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/__init__.py)
 
-[![Screenshot](https://github.com/labmlai/neox/blob/main/assets/annotated_gpt_neox_model.png)](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/__init__.py)
+[![Screenshot of annotated implementation](https://github.com/labmlai/neox/blob/main/assets/annotated_gpt_neox_model.png)](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/__init__.py)
 
 ### Sample usages
 
@@ -15,6 +15,11 @@ several optimizations in GPT-NeoX for simplicity.
 * [Text generating on multi GPU](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/samples/generating_pipe.html)
 * [Text generating on a small GPU (offloading to CPU)](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/samples/generating_small_gpu.html)
 * [Text generating on a single 48GB GPU](https://lit.labml.ai/github/labmlai/neox/tree/main/src/neox/samples/generating_gpu.html)
+
+### [Playground](https://neox.labml.ai)
+
+[![Screenshot of playground](https://github.com/labmlai/neox/blob/main/assets/gpt_neox_playground.png)](https://neox.labml.ai)
+
 
 ### Evaluation
 
