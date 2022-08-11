@@ -1,3 +1,7 @@
+# ⚠️ We have moved this implementation to [https://nn.labml.ai/neox/index.html](https://nn.labml.ai/neox/index.html).
+
+-----
+
 # Simple Annotated implementation of GPT-NeoX in PyTorch
 
 This is a simpler implementation of [GPT-NeoX](https://github.com/EleutherAI/gpt-neox) in PyTorch. We have taken out
